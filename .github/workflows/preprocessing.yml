@@ -35,5 +35,5 @@ jobs:
         with:
           # Nama file zip yang akan dihasilkan
           name: Andreaskevin_preprocessing
-          path: diabetes_preprocessing/
+          path: /
 
