@@ -61,6 +61,7 @@ def preprocess_data(df_raw, test_size=0.2, random_state=42):
     y = df_clean['Outcome']
 
     # 3. Membagi Data Menjadi Train dan Test
+    # stratify=y penting untuk klasifikasi
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
     print(f"Data dibagi menjadi train set ({X_train.shape[0]} sampel) dan test set ({X_test.shape[0]} sampel).")
 
@@ -68,7 +69,6 @@ def preprocess_data(df_raw, test_size=0.2, random_state=42):
     scaler = MinMaxScaler()
     
     X_train_scaled = scaler.fit_transform(X_train)
-    
     X_test_scaled = scaler.transform(X_test)
     
     X_train_scaled_df = pd.DataFrame(X_train_scaled, columns=X.columns)
@@ -79,28 +79,39 @@ def preprocess_data(df_raw, test_size=0.2, random_state=42):
     return X_train_scaled_df, X_test_scaled_df, y_train, y_test
 
 if __name__ == "__main__":
+    RAW_DATA_PATH = "Diabetes.csv" 
     
     try:
-        df_diabetes_raw = pd.read_csv("Diabetes.csv", sep=",")
-        print("Dataset 'Diabetes.csv' berhasil dimuat.")
+        # Kita asumsikan 'Diabetes.csv' ada di root, sama seperti skrip ini
+        df_diabetes_raw = pd.read_csv(RAW_DATA_PATH, sep=",")
+        print(f"Dataset '{RAW_DATA_PATH}' berhasil dimuat.")
         
         X_train_final, X_test_final, y_train_final, y_test_final = preprocess_data(df_diabetes_raw)
         
         if X_train_final is not None:
-            print("\n--- Hasil Akhir Siap untuk Model ---")
-            print("\nX_train (data latih fitur) (5 baris pertama):")
-            print(X_train_final.head())
+            # 1. Reset index pada semua bagian. 
+            X_train_reset = X_train_final.reset_index(drop=True)
+            y_train_reset = y_train_final.reset_index(drop=True)
+            X_test_reset = X_test_final.reset_index(drop=True)
+            y_test_reset = y_test_final.reset_index(drop=True)
+
+            # 2. Gabungkan fitur dan target untuk TRAIN set (axis=1 artinya gabung menyamping)
+            train_set = pd.concat([X_train_reset, y_train_reset], axis=1)
             
-            print(f"\nUkuran X_train: {X_train_final.shape}")
-            print(f"Ukuran y_train: {y_train_final.shape}")
-            print(f"Ukuran X_test: {X_test_final.shape}")
-            print(f"Ukuran y_test: {y_test_final.shape}")
+            # 3. Gabungkan fitur dan target untuk TEST set
+            test_set = pd.concat([X_test_reset, y_test_reset], axis=1)
+
+            # 4. Simpan menjadi DUA file
+            train_set.to_csv("train_set.csv", index=False)
+            test_set.to_csv("test_set.csv", index=False)
             
-            print("\nDeskripsi X_train (setelah scaling):")
-            print(X_train_final.describe())
+            print(train_set.head())
+            
+            print(f"\nUkuran Train Set: {train_set.shape}")
+            print(f"Ukuran Test Set: {test_set.shape}")
 
     except FileNotFoundError:
-        print("File 'Diabetes.csv' tidak ditemukan.")
-        print("Silakan ganti 'Diabetes.csv' dengan path yang benar ke file Anda.")
+        print(f"File '{RAW_DATA_PATH}' tidak ditemukan.")
+        print(f"Pastikan file '{RAW_DATA_PATH}' ada di direktori yang sama dengan skrip ini.")
     except Exception as e:
         print(f"Terjadi error: {e}")
