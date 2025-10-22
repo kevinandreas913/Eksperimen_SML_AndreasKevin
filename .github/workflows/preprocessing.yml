@@ -28,13 +28,12 @@ jobs:
           pip install pandas scikit-learn numpy
 
       - name: 4. Jalankan script preprocessing
-
-        run: python Eksperimen_SML_AndreasKevin/preprocessing/automate_Andreas-Kevin.py
+        run: python automate_Andreas-Kevin.py
 
       - name: 5. Upload hasil preprocessing sebagai artifact
         uses: actions/upload-artifact@v4
         with:
           # Nama file zip yang akan dihasilkan
           name: dataset-yang-sudah-diproses
-          path: Eksperimen_SML_AndreasKevin/preprocessing/diabetes_preprocessing/
+          path: diabetes_preprocessing/
 
