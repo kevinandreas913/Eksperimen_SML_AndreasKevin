@@ -35,5 +35,7 @@ jobs:
         with:
           # Nama file zip yang akan dihasilkan
           name: Andreaskevin_preprocessing
-          path: /
+          path: 
+            train_set.csv
+            test_set.csv
 
