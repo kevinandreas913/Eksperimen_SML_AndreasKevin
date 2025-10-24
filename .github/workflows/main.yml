@@ -32,8 +32,8 @@ jobs:
           pip install pandas numpy scikit-learn
 
       # Langkah 4: Jalankan skrip Python Anda
-      - name: Run preprocessing script
-        run: python preprocess.py
+      - name: Run automate_Andreas-Kevin script
+        run: python automate_Andreas-Kevin.py
 
       # Langkah 5: (BARU) Upload hasil 'diabetes_cleaned.csv' sebagai Artifact
       - name: Upload cleaned data as artifact
