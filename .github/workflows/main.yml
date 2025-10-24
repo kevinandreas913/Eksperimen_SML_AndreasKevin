@@ -1,0 +1,54 @@
+name: Clean and Normalize Data
+
+on:
+  # 1. Memicu workflow setiap kali ada 'push' ke file 'Diabetes.csv'
+  push:
+    paths:
+      - 'Diabetes.csv'
+      
+  # 2. Memungkinkan Anda menjalankan workflow ini secara manual dari tab Actions
+  workflow_dispatch:
+
+jobs:
+  build-and-commit:
+    name: Run Data Preprocessing
+    # Menggunakan runner Ubuntu versi terbaru
+    runs-on: ubuntu-latest
+
+    steps:
+      # Langkah 1: Checkout kode dari repositori Anda
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # Langkah 2: Set up Python 3.12
+      # (Koreksi dari 2.12.7, yang tidak ada dan tidak kompatibel)
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip' # Menambahkan cache untuk mempercepat instalasi
+
+      # Langkah 3: Install library yang dibutuhkan (pandas, numpy, scikit-learn)
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy scikit-learn
+
+      # Langkah 4: Jalankan skrip Python Anda (preprocess.py)
+      - name: Run preprocessing script
+        run: python automate_Andreas-Kevin.py
+
+      # Langkah 5: Commit dan Push file 'diabetes_cleaned.csv' yang baru dibuat
+      - name: Commit and push cleaned data
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          # Pesan commit yang akan digunakan
+          commit_message: "chore: Auto-update diabetes_cleaned.csv"
+          
+          # Hanya commit file spesifik ini jika ada perubahan
+          file_pattern: 'diabetes_cleaned.csv'
+          
+          # Informasi pengguna untuk commit (bot)
+          commit_user_name: "GitHub Actions Bot"
+          commit_user_email: "actions@github.com"
+          commit_author: "GitHub Actions Bot <actions@github.com>"
