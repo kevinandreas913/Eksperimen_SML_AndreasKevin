@@ -1,21 +1,14 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.model_selection import train_test_split
-import warnings
+import sys
 
 def kolomoutlier(df):
     outlier_columns = []
     for col in df.select_dtypes(include=[np.number]).columns:
-        if col == 'Outcome':
-            continue
-            
         q25, q75 = np.percentile(df[col], 25), np.percentile(df[col], 75)
         iqr = q75 - q25
         
-        if iqr == 0:
-            continue
-            
         cut_off = iqr * 1.5
         minimum, maximum = q25 - cut_off, q75 + cut_off
 
@@ -41,11 +34,12 @@ def remove_outliers(df, columns):
     
     return df_clean
 
-def preprocess_data(df_raw, test_size=0.2, random_state=42):
-    warnings.filterwarnings('ignore', category=pd.errors.SettingWithCopyWarning)
-    
-    # 1. Menghapus Outlier (sesuai logika Anda)
+def clean_and_normalize_data(df_raw):
+    """
+    Menggabungkan proses cleaning dan normalisasi.
+    """
     print(f"Jumlah data asli: {len(df_raw)}")
+    
     columns_with_outliers = kolomoutlier(df_raw)
     print(f"Kolom dengan outlier terdeteksi: {columns_with_outliers}")
     
@@ -54,64 +48,39 @@ def preprocess_data(df_raw, test_size=0.2, random_state=42):
     
     if df_clean.empty:
         print("Semua data terhapus setelah pembersihan outlier.")
-        return None, None, None, None
-
-    # 2. Memisahkan Fitur (X) dan Target (y)
-    X = df_clean.drop(['Outcome'], axis=1)
-    y = df_clean['Outcome']
-
-    # 3. Membagi Data Menjadi Train dan Test
-    # stratify=y penting untuk klasifikasi
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state, stratify=y)
-    print(f"Data dibagi menjadi train set ({X_train.shape[0]} sampel) dan test set ({X_test.shape[0]} sampel).")
-
-    # 4. Normalisasi (Scaling)
+        return None
+    
+    original_columns = df_clean.columns
+    
+    print("Menerapkan normalisasi MinMaxScaler ke seluruh data...")
     scaler = MinMaxScaler()
+    df_scaled_data = scaler.fit_transform(df_clean)
     
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    # Ubah kembali menjadi DataFrame dengan nama kolom yang benar
+    df_final = pd.DataFrame(df_scaled_data, columns=original_columns)
     
-    X_train_scaled_df = pd.DataFrame(X_train_scaled, columns=X.columns)
-    X_test_scaled_df = pd.DataFrame(X_test_scaled, columns=X.columns)
-    
-    print("Preprocessing Selesai")
-    
-    return X_train_scaled_df, X_test_scaled_df, y_train, y_test
+    print("Pembersihan dan normalisasi selesai.")
+    return df_final
 
 if __name__ == "__main__":
-    RAW_DATA_PATH = "Diabetes.csv" 
+    dataset = "Diabetes.csv"
+    dataset_bersih = "diabetes_cleaned.csv"
     
     try:
-        # Kita asumsikan 'Diabetes.csv' ada di root, sama seperti skrip ini
-        df_diabetes_raw = pd.read_csv(RAW_DATA_PATH, sep=",")
-        print(f"Dataset '{RAW_DATA_PATH}' berhasil dimuat.")
+        df_diabetes_raw = pd.read_csv(dataset, sep=",")
+        print(f"Dataset '{dataset}' berhasil dimuat.")
         
-        X_train_final, X_test_final, y_train_final, y_test_final = preprocess_data(df_diabetes_raw)
+        df_processed = clean_and_normalize_data(df_diabetes_raw)
         
-        if X_train_final is not None:
-            # 1. Reset index pada semua bagian. 
-            X_train_reset = X_train_final.reset_index(drop=True)
-            y_train_reset = y_train_final.reset_index(drop=True)
-            X_test_reset = X_test_final.reset_index(drop=True)
-            y_test_reset = y_test_final.reset_index(drop=True)
-
-            # 2. Gabungkan fitur dan target untuk TRAIN set (axis=1 artinya gabung menyamping)
-            train_set = pd.concat([X_train_reset, y_train_reset], axis=1)
+        if df_processed is not None:
+            df_processed.to_csv(dataset_bersih, index=False)
             
-            # 3. Gabungkan fitur dan target untuk TEST set
-            test_set = pd.concat([X_test_reset, y_test_reset], axis=1)
-
-            # 4. Simpan menjadi DUA file
-            train_set.to_csv("train_set.csv", index=False)
-            test_set.to_csv("test_set.csv", index=False)
-            
-            print(train_set.head())
-            
-            print(f"\nUkuran Train Set: {train_set.shape}")
-            print(f"Ukuran Test Set: {test_set.shape}")
+            print(f"\nData bersih telah disimpan ke: {dataset_bersih}")
+            print("5 baris pertama data bersih:")
+            print(df_processed.head())
+            print(f"\nUkuran Data Final: {df_processed.shape}")
 
     except FileNotFoundError:
-        print(f"File '{RAW_DATA_PATH}' tidak ditemukan.")
-        print(f"Pastikan file '{RAW_DATA_PATH}' ada di direktori yang sama dengan skrip ini.")
+        print(f"File '{dataset}' tidak ditemukan.", file=sys.stderr)
     except Exception as e:
-        print(f"Terjadi error: {e}")
+        print(f"Terjadi error yang tidak terduga: {e}", file=sys.stderr)
