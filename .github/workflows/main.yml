@@ -1,18 +1,16 @@
+# Nama workflow
 name: Clean and Normalize Data
 
 on:
-  # 1. Memicu workflow setiap kali ada 'push' ke file 'Diabetes.csv'
+  #setiap kali ada 'push' ke branch manapun
   push:
-    paths:
-      - 'Diabetes.csv'
-      
-  # 2. Memungkinkan Anda menjalankan workflow ini secara manual dari tab Actions
+  
+  #menjalankan workflow ini secara manual
   workflow_dispatch:
 
 jobs:
-  build-and-commit:
-    name: Run Data Preprocessing
-    # Menggunakan runner Ubuntu versi terbaru
+  build-and-upload:
+    name: Run Preprocessing and Upload Artifact
     runs-on: ubuntu-latest
 
     steps:
@@ -21,34 +19,26 @@ jobs:
         uses: actions/checkout@v4
 
       # Langkah 2: Set up Python 3.12
-      # (Koreksi dari 2.12.7, yang tidak ada dan tidak kompatibel)
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip' # Menambahkan cache untuk mempercepat instalasi
+          cache: 'pip'
 
-      # Langkah 3: Install library yang dibutuhkan (pandas, numpy, scikit-learn)
+      # Langkah 3: Install library yang dibutuhkan
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pandas numpy scikit-learn
 
-      # Langkah 4: Jalankan skrip Python Anda (preprocess.py)
+      # Langkah 4: Jalankan skrip Python Anda
       - name: Run preprocessing script
-        run: python automate_Andreas-Kevin.py
+        run: python preprocess.py
 
-      # Langkah 5: Commit dan Push file 'diabetes_cleaned.csv' yang baru dibuat
-      - name: Commit and push cleaned data
-        uses: stefanzweifel/git-auto-commit-action@v5
+      # Langkah 5: (BARU) Upload hasil 'diabetes_cleaned.csv' sebagai Artifact
+      - name: Upload cleaned data as artifact
+        uses: actions/upload-artifact@v4
         with:
-          # Pesan commit yang akan digunakan
-          commit_message: "chore: Auto-update diabetes_cleaned.csv"
-          
-          # Hanya commit file spesifik ini jika ada perubahan
-          file_pattern: 'diabetes_cleaned.csv'
-          
-          # Informasi pengguna untuk commit (bot)
-          commit_user_name: "GitHub Actions Bot"
-          commit_user_email: "actions@github.com"
-          commit_author: "GitHub Actions Bot <actions@github.com>"
+          name: cleaned-diabetes-data
+          path: diabetes_cleaned.csv
+          retention-days: 7
