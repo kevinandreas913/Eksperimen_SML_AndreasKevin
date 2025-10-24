@@ -40,5 +40,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cleaned-diabetes-data
-          path: diabetes_cleaned.csv
+          path: 
+            diabetes_cleaned.csv
+            minmax_scaler.joblib
           retention-days: 7

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 import sys
+import joblib
 
 def kolomoutlier(df):
     outlier_columns = []
@@ -13,7 +14,7 @@ def kolomoutlier(df):
         minimum, maximum = q25 - cut_off, q75 + cut_off
 
         outliers = df[(df[col] < minimum) | (df[col] > maximum)]
-        if not outliers.empty:  # Jika ada outlier, tambahkan ke list
+        if not outliers.empty: 
             outlier_columns.append(col)
     
     return outlier_columns
@@ -35,9 +36,6 @@ def remove_outliers(df, columns):
     return df_clean
 
 def clean_and_normalize_data(df_raw):
-    """
-    Menggabungkan proses cleaning dan normalisasi.
-    """
     print(f"Jumlah data asli: {len(df_raw)}")
     
     columns_with_outliers = kolomoutlier(df_raw)
@@ -48,7 +46,7 @@ def clean_and_normalize_data(df_raw):
     
     if df_clean.empty:
         print("Semua data terhapus setelah pembersihan outlier.")
-        return None
+        return None, None
     
     original_columns = df_clean.columns
     
@@ -56,27 +54,29 @@ def clean_and_normalize_data(df_raw):
     scaler = MinMaxScaler()
     df_scaled_data = scaler.fit_transform(df_clean)
     
-    # Ubah kembali menjadi DataFrame dengan nama kolom yang benar
     df_final = pd.DataFrame(df_scaled_data, columns=original_columns)
     
     print("Pembersihan dan normalisasi selesai.")
-    return df_final
+    return df_final, scaler
 
 if __name__ == "__main__":
     dataset = "Diabetes.csv"
     dataset_bersih = "diabetes_cleaned.csv"
+    scaler_file = "minmax_scaler.joblib" 
     
     try:
         df_diabetes_raw = pd.read_csv(dataset, sep=",")
         print(f"Dataset '{dataset}' berhasil dimuat.")
         
-        df_processed = clean_and_normalize_data(df_diabetes_raw)
+        df_processed, scaler_object = clean_and_normalize_data(df_diabetes_raw)
         
-        if df_processed is not None:
+        if df_processed is not None and scaler_object is not None:
             df_processed.to_csv(dataset_bersih, index=False)
-            
             print(f"\nData bersih telah disimpan ke: {dataset_bersih}")
-            print("5 baris pertama data bersih:")
+            
+            joblib.dump(scaler_object, scaler_file)
+            print(f"Scaler telah disimpan ke: {scaler_file}")
+            
             print(df_processed.head())
             print(f"\nUkuran Data Final: {df_processed.shape}")
 
