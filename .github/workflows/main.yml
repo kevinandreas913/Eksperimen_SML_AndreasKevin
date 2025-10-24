@@ -18,6 +18,13 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
+      # --- LANGKAH DEBUGGING 1 ---
+      # Tampilkan semua file yang ada di repositori
+      - name: 1.5 - List files after checkout
+        run: |
+          echo "Melihat file di root direktori:"
+          ls -l
+
       # Langkah 2: Set up Python 3.12
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -35,12 +42,18 @@ jobs:
       - name: Run automate_Andreas-Kevin script
         run: python automate_Andreas-Kevin.py
 
-      # Langkah 5: (BARU) Upload hasil 'diabetes_cleaned.csv' sebagai Artifact
-      - name: Upload cleaned data as artifact
+      - name: 4.5 - List files after python script
+        run: |
+          echo "Melihat file setelah skrip Python dijalankan:"
+          ls -l
+
+      # Langkah 5: Upload hasil sebagai Artifact
+      - name: Upload processing artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: cleaned-diabetes-data
-          path: 
+          name: processing-results
+          path: |
             diabetes_cleaned.csv
             minmax_scaler.joblib
           retention-days: 7
+
